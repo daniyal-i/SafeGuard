@@ -82,6 +82,22 @@ IoT Core. Any downstream routing (for example, an IoT Rule, database, or
 notification service) must be configured separately in AWS. The dashboard
 does not subscribe to the topic.
 
+### Check detector status
+
+The detector reports its status in the terminal where it is running:
+
+- **Connected:** `Connected to AWS IoT Core.`
+- **Listening:** `Listening in 'Main Hallway'...`
+- **Alert published:** `alert published to sentinel/alerts`
+- **Connection or publish problem:** Look for an error message, such as
+  `publish FAILED`, or a missing certificate/key message at startup.
+
+No alert message simply means no detection has crossed the configured threshold
+yet; it does not by itself mean the detector has stopped. These messages only
+show the device script's local status. They are not a remote health check, and
+the dashboard cannot display them until a device-to-dashboard connection is
+implemented.
+
 ## Safety and privacy
 
 - SafeGuard is a prototype and may miss real events or produce false alerts.
