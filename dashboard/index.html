@@ -56,8 +56,8 @@
       object-fit: contain;
     }
 
-    .bar nav { display: flex; align-items: center; gap: 8px; }
-    .bar nav a {
+    .bar nav, .view-tabs { display: flex; align-items: center; gap: 8px; }
+    .bar nav a, .view-tabs a {
       border-radius: 10px;
       padding: 8px 12px;
       color: var(--muted);
@@ -66,8 +66,8 @@
       text-decoration: none;
     }
 
-    .bar nav a:hover { background: #f8f6ff; color: var(--ink); }
-    .bar nav a[aria-current="page"] { background: #fee2e2; color: #991b1b; }
+    .bar nav a:hover, .view-tabs a:hover { background: #f8f6ff; color: var(--ink); }
+    .view-tabs a[aria-selected="true"] { background: #fee2e2; color: #991b1b; }
     .mode, .label { color: var(--muted); font-size: 13px; }
 
     .mode {
@@ -176,7 +176,78 @@
     select { max-width: 100%; background: #f8f6ff; color: var(--ink); }
     button { cursor: pointer; background: #dc2626; color: #fff; font-weight: 750; }
     button:hover { background: #b91c1c; }
+    button.secondary { background: #fff; color: var(--ink); }
+    button.secondary:hover { background: #f8f6ff; }
     :focus-visible { outline: 2px solid #dc2626; outline-offset: 3px; }
+
+    .detection-view { margin-top: 18px; }
+    .detection-view > p { margin-top: 7px; color: var(--muted); }
+    .detection-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+    .detection-input { min-width: 0; border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+    .detection-input > p { margin-top: 6px; color: var(--muted); font-size: 14px; }
+    .detection-input > button { margin-top: 14px; }
+    .upload-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; margin-top: 18px; }
+    .upload-status { min-height: 1.5em; margin-top: 12px; color: var(--muted); font-size: 14px; }
+    .upload-dropzone {
+      position: relative;
+      display: grid;
+      width: min(100%, 300px);
+      aspect-ratio: 1;
+      place-content: center;
+      gap: 8px;
+      border: 2px dashed #dc2626;
+      border-radius: 20px;
+      background: rgb(220 38 38 / 8%);
+      color: #991b1b;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 800;
+      text-align: center;
+      transition: background .15s ease, transform .15s ease;
+    }
+
+    .upload-dropzone::before {
+      content: "+";
+      font-size: 44px;
+      line-height: 1;
+    }
+
+    .upload-dropzone:hover, .upload-dropzone.is-dragging { background: rgb(220 38 38 / 15%); }
+    .upload-dropzone:active { transform: scale(.99); }
+    .upload-dropzone:focus-within { outline: 2px solid #dc2626; outline-offset: 3px; }
+    .upload-dropzone input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .upload-preview {
+      display: block;
+      max-width: 100%;
+      max-height: 420px;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      object-fit: contain;
+      background: #faf9fc;
+    }
+
+    .model-status {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: #faf9fc;
+    }
+
+    .model-status h2 { font-size: 18px; }
+    .model-status p { margin-top: 5px; color: var(--muted); font-size: 14px; }
+    [hidden] { display: none !important; }
 
     figure label { display: block; margin-top: 12px; color: var(--muted); font-size: 14px; }
     figure select { margin-left: 6px; }
@@ -277,7 +348,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .live-status span { animation: none; }
+      .live-status span, .activity-marker { animation: none; }
     }
 
     #activity-chart {
@@ -285,6 +356,42 @@
       width: 100%;
       height: 190px;
     }
+
+    .activity-chart-wrap { position: relative; }
+
+    .activity-tooltip {
+      position: absolute;
+      z-index: 1;
+      max-width: 240px;
+      border-radius: 8px;
+      padding: 7px 10px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.4;
+      pointer-events: none;
+      transform: translate(-50%, calc(-100% - 10px));
+      white-space: nowrap;
+    }
+
+    .activity-tooltip[hidden] { display: none; }
+    .activity-tooltip.is-below { transform: translate(-50%, 10px); }
+
+    .activity-marker {
+      position: absolute;
+      top: var(--activity-marker-y, 8px);
+      right: 2.5px;
+      width: 11px;
+      height: 11px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+      background: #dc2626;
+      box-shadow: 0 0 0 3px #dc262633;
+      animation: pulse 1.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .activity-marker[hidden] { display: none; }
 
     .live-value { font-size: 14px; font-weight: 750; }
 
@@ -431,10 +538,10 @@
     .footer-links a:hover { color: #b91c1c; text-decoration: underline; }
 
     @media (max-width: 680px) {
-      .hero, .analytics { grid-template-columns: 1fr; }
+      .hero, .analytics, .detection-inputs { grid-template-columns: 1fr; }
       .bar { gap: 12px; }
-      .bar nav { gap: 2px; }
-      .bar nav a { padding-inline: 8px; }
+      .bar nav, .view-tabs { gap: 2px; }
+      .bar nav a, .view-tabs a { padding-inline: 8px; }
       .footer-content { grid-template-columns: 1fr; }
     }
   </style>
@@ -447,7 +554,10 @@
         SafeGuard
       </div>
       <nav aria-label="Main navigation">
-        <a href="#dashboard" aria-current="page">Alert Dashboard</a>
+        <div class="view-tabs" role="tablist" aria-label="Dashboard views">
+          <a id="dashboard-tab" href="#dashboard" role="tab" aria-selected="true" aria-controls="dashboard-view">Alert Dashboard</a>
+          <a id="detection-tab" href="#detection" role="tab" aria-selected="false" aria-controls="detection" tabindex="-1">Detection</a>
+        </div>
         <a href="#about">About</a>
       </nav>
       <div class="mode">Demo mode</div>
@@ -455,6 +565,7 @@
   </header>
 
   <main id="dashboard">
+    <div id="dashboard-view" role="tabpanel" aria-labelledby="dashboard-tab" tabindex="0">
     <div class="intro-card">
       <h1>Alert dashboard</h1>
       <p class="intro">
@@ -487,13 +598,17 @@
       <div class="head">
         <div>
           <h2 id="live-heading">Live activity preview</h2>
-          <p class="live-note">Simulated detector activity score over the last minute.</p>
+          <p class="live-note">Detector activity score from each simulation. Hover over a point to see its log.</p>
         </div>
-        <span class="live-status"><span aria-hidden="true"></span>LIVE DEMO</span>
+        <span class="live-status"><span aria-hidden="true"></span>SIMULATED</span>
       </div>
-      <canvas id="activity-chart" role="img" aria-label="Live demo activity score chart"></canvas>
-      <p id="activity-value" class="live-value">Demo activity score: 12%</p>
-      <p class="live-note">This animated preview uses generated data. It is not connected to the detector or AWS.</p>
+      <div class="activity-chart-wrap">
+        <canvas id="activity-chart" role="img" aria-label="Simulated activity score chart. Run a simulation to display a score."></canvas>
+        <span id="activity-marker" class="activity-marker" aria-hidden="true" hidden></span>
+        <span id="activity-tooltip" class="activity-tooltip" role="tooltip" hidden></span>
+      </div>
+      <p id="activity-value" class="live-value">Run a simulation to see its score.</p>
+      <p class="live-note">The graph updates only when a simulation runs; the blinking dot marks its latest score. It is not connected to the detector or AWS.</p>
     </section>
 
     <section class="analytics" aria-label="Alert charts">
@@ -573,11 +688,58 @@
         guarantee safety or replace contacting emergency services directly.
         This prototype currently includes device code that listens for
         gunshot-like sounds and can publish a detection to AWS IoT Core when
-        configured. This dashboard is not connected to that device or AWS: its
-        alerts and activity graph use simulated data, and it does not contact
-        first responders. A detection is only a possible alert and needs human
-        verification. In an emergency, call 911 or your local emergency number.
+        configured. The dashboard's sample alerts and activity graph use
+        simulated data. Its Detection tab can control local detector scripts;
+        audio alert metadata may be published to AWS IoT when configured, while
+        camera images are sent only to the local image detector. It does not
+        contact first responders. Model results are possible detections and
+        need human verification. In an emergency, call 911 or your local
+        emergency number.
       </p>
+    </section>
+    </div>
+
+    <section id="detection" class="card detection-view" role="tabpanel" aria-labelledby="detection-tab" tabindex="0" hidden>
+      <h1 id="detection-heading">Audio &amp; Image Detection</h1>
+      <p>Start the local detector to analyze microphone audio, or capture a camera frame for image analysis. Detected events are possible results and need human review.</p>
+      <p class="live-note">Start the local bridge once with <code>python3 connect_device_package/web_service.py</code>, then open <code>http://127.0.0.1:8765</code>. Model analysis runs on this computer; first use may download model files. Allow microphone access to the terminal/Python app in macOS privacy settings if prompted.</p>
+      <div class="detection-inputs">
+        <section class="detection-input" aria-labelledby="audio-input-heading">
+          <h2 id="audio-input-heading">Audio input</h2>
+          <p>Start and stop the detector’s continuous microphone feed.</p>
+          <div class="upload-actions">
+            <button id="start-audio" type="button">Start live audio feed</button>
+            <button id="stop-audio" class="secondary" type="button" disabled>Stop audio feed</button>
+          </div>
+          <p id="audio-status" class="upload-status" role="status" aria-live="polite">Microphone is off.</p>
+        </section>
+
+        <section class="detection-input" aria-labelledby="image-input-heading">
+          <h2 id="image-input-heading">Image input</h2>
+          <p>Start the camera and capture a frame, or select a photo. Camera snapshots are sent only to this computer’s local detector.</p>
+          <div class="upload-actions">
+            <button id="start-camera" type="button">Start camera</button>
+            <button id="capture-photo" class="secondary" type="button" disabled>Capture frame</button>
+            <button id="stop-camera" class="secondary" type="button" disabled>Stop camera</button>
+            <button id="analyze-photo" class="secondary" type="button" disabled>Analyze selected photo</button>
+            <label class="upload-dropzone">
+              <span>Insert photo here</span>
+              <input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="photo-help image-status">
+            </label>
+          </div>
+          <video id="camera-preview" class="upload-preview" autoplay muted playsinline aria-label="Camera preview" hidden></video>
+          <p id="photo-help" class="live-note">Click the square or drop a JPEG, PNG, or WebP image there. Maximum 10 MB.</p>
+          <p id="image-status" class="upload-status" role="status" aria-live="polite">Camera is off. No photo selected.</p>
+          <img id="photo-preview" class="upload-preview" alt="Captured or selected photo preview" hidden>
+          <button id="clear-photo" class="secondary" type="button" disabled>Remove photo</button>
+        </section>
+      </div>
+
+      <section class="model-status" aria-labelledby="detection-results-heading">
+        <h2 id="detection-results-heading">Detection results</h2>
+        <p id="detection-result" role="status" aria-live="polite">Waiting for the local detection service. No threat assessment has been made.</p>
+        <p>Automated model results can be wrong or miss threats. Treat them as possible detections for human review, not confirmed threats or a substitute for emergency services.</p>
+      </section>
     </section>
   </main>
 
@@ -647,7 +809,323 @@
     const locationFilter = document.querySelector('#location-filter');
     const activityChart = document.querySelector('#activity-chart');
     const activityValue = document.querySelector('#activity-value');
-    const activitySamples = Array.from({ length: 60 }, () => 12);
+    const activityMarker = document.querySelector('#activity-marker');
+    const activityTooltip = document.querySelector('#activity-tooltip');
+    const activitySamples = [];
+    const dashboardView = document.querySelector('#dashboard-view');
+    const detectionView = document.querySelector('#detection');
+    const dashboardTab = document.querySelector('#dashboard-tab');
+    const detectionTab = document.querySelector('#detection-tab');
+    const photoInput = document.querySelector('#photo-input');
+    const photoPreview = document.querySelector('#photo-preview');
+    const imageStatus = document.querySelector('#image-status');
+    const clearPhotoButton = document.querySelector('#clear-photo');
+    const analyzePhotoButton = document.querySelector('#analyze-photo');
+    const uploadDropzone = document.querySelector('.upload-dropzone');
+    const cameraPreview = document.querySelector('#camera-preview');
+    const startCameraButton = document.querySelector('#start-camera');
+    const capturePhotoButton = document.querySelector('#capture-photo');
+    const stopCameraButton = document.querySelector('#stop-camera');
+    const startAudioButton = document.querySelector('#start-audio');
+    const stopAudioButton = document.querySelector('#stop-audio');
+    const audioStatus = document.querySelector('#audio-status');
+    let cameraStream = null;
+    let photoPreviewUrl = null;
+    let selectedPhoto = null;
+    let audioRunning = false;
+    let latestDetectionKey = '';
+
+    function showView(view) {
+      const showDetection = view === 'detection';
+      dashboardView.hidden = showDetection;
+      detectionView.hidden = !showDetection;
+      dashboardTab.setAttribute('aria-selected', String(!showDetection));
+      dashboardTab.tabIndex = showDetection ? -1 : 0;
+      detectionTab.setAttribute('aria-selected', String(showDetection));
+      detectionTab.tabIndex = showDetection ? 0 : -1;
+      if (!showDetection) {
+        stopCamera();
+        stopAudioFeed();
+      }
+    }
+
+    function clearPhoto(message = 'No photo selected.') {
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+      photoPreviewUrl = null;
+      selectedPhoto = null;
+      photoInput.value = '';
+      photoPreview.removeAttribute('src');
+      photoPreview.hidden = true;
+      clearPhotoButton.disabled = true;
+      analyzePhotoButton.disabled = true;
+      imageStatus.textContent = message;
+    }
+
+    dashboardTab.addEventListener('click', event => {
+      event.preventDefault();
+      showView('dashboard');
+      history.replaceState(null, '', '#dashboard');
+    });
+
+    detectionTab.addEventListener('click', event => {
+      event.preventDefault();
+      showView('detection');
+      history.replaceState(null, '', '#detection');
+    });
+
+    document.querySelector('[role="tablist"]').addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const tabs = [dashboardTab, detectionTab];
+      const currentIndex = tabs.indexOf(document.activeElement);
+      const nextIndex = event.key === 'Home' ? 0
+        : event.key === 'End' ? tabs.length - 1
+          : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      const nextTab = tabs[nextIndex];
+      nextTab.focus();
+      nextTab.click();
+    });
+
+    window.addEventListener('hashchange', () => {
+      showView(window.location.hash === '#detection' ? 'detection' : 'dashboard');
+    });
+
+    function previewPhoto(file) {
+      if (!file) return;
+
+      const supportedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!supportedTypes.includes(file.type)) {
+        clearPhoto('Unsupported file. Choose a JPEG, PNG, or WebP image.');
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        clearPhoto('This image is larger than 10 MB. Choose a smaller image.');
+        return;
+      }
+
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+      selectedPhoto = file;
+      photoPreviewUrl = URL.createObjectURL(file);
+      photoPreview.src = photoPreviewUrl;
+      photoPreview.hidden = false;
+      clearPhotoButton.disabled = false;
+      analyzePhotoButton.disabled = false;
+      imageStatus.textContent = file.name + ' selected. Ready for local image analysis.';
+    }
+
+    photoInput.addEventListener('change', () => previewPhoto(photoInput.files[0]));
+
+    for (const eventName of ['dragenter', 'dragover']) {
+      uploadDropzone.addEventListener(eventName, event => {
+        event.preventDefault();
+        uploadDropzone.classList.add('is-dragging');
+      });
+    }
+
+    for (const eventName of ['dragleave', 'drop']) {
+      uploadDropzone.addEventListener(eventName, event => {
+        event.preventDefault();
+        uploadDropzone.classList.remove('is-dragging');
+      });
+    }
+
+    uploadDropzone.addEventListener('drop', event => {
+      previewPhoto(event.dataTransfer.files[0]);
+    });
+
+    async function requestApi(path, options = {}) {
+      const response = await fetch(path, options);
+      let payload;
+      try {
+        payload = await response.json();
+      } catch {
+        throw new Error('The local service returned an invalid response.');
+      }
+      if (!response.ok) throw new Error(payload.error || 'Local service request failed.');
+      return payload;
+    }
+
+    function showDetection(event) {
+      if (!event) return;
+      const key = event.detected_at + ':' + event.source;
+      if (key === latestDetectionKey) return;
+      latestDetectionKey = key;
+      let summary;
+      if (event.source === 'audio') {
+        summary = event.label + ' · model score ' + Math.round(event.confidence * 100) + '%';
+        summary += event.published ? ' · alert published to AWS IoT' : ' · not published to AWS IoT';
+      } else if (event.detections.length) {
+        summary = 'Possible firearm detection: ' + event.detections.map(detection =>
+          detection.label + ' (' + Math.round(detection.confidence * 100) + '%)'
+        ).join(', ');
+      } else {
+        summary = 'No firearm detections above the model threshold in this image.';
+      }
+      document.querySelector('#detection-result').textContent =
+        summary + ' · ' + time.format(new Date(event.detected_at)) +
+        ' · automated result; verify manually.';
+    }
+
+    async function refreshDetectorState() {
+      try {
+        const state = await requestApi('/api/state');
+        audioRunning = state.audio.running;
+        audioStatus.textContent = state.audio.status;
+        startAudioButton.disabled = audioRunning;
+        stopAudioButton.disabled = !audioRunning;
+        if (state.events.length) {
+          showDetection(state.events[0]);
+        } else {
+          document.querySelector('#detection-result').textContent =
+            'Local analysis ready. Start the audio feed or capture a camera frame. No threat assessment has been made yet.';
+        }
+      } catch (error) {
+        startAudioButton.disabled = false;
+        stopAudioButton.disabled = true;
+        audioRunning = false;
+        audioStatus.textContent = 'Local detector service unavailable. Start it with the command shown above.';
+        if (!latestDetectionKey) {
+          document.querySelector('#detection-result').textContent =
+            'Local analysis is unavailable: ' + error.message;
+        }
+      }
+    }
+
+    startAudioButton.addEventListener('click', async () => {
+      startAudioButton.disabled = true;
+      audioStatus.textContent = 'Starting local audio detector…';
+      try {
+        await requestApi('/api/audio/start', { method: 'POST' });
+        await refreshDetectorState();
+      } catch (error) {
+        audioStatus.textContent = 'Could not start audio detector: ' + error.message;
+        startAudioButton.disabled = false;
+      }
+    });
+
+    async function stopAudioFeed() {
+      if (!audioRunning) return;
+      stopAudioButton.disabled = true;
+      try {
+        await requestApi('/api/audio/stop', { method: 'POST' });
+        audioStatus.textContent = 'Stopping local audio detector…';
+      } catch (error) {
+        audioStatus.textContent = 'Could not stop audio detector: ' + error.message;
+      }
+    }
+
+    stopAudioButton.addEventListener('click', stopAudioFeed);
+    clearPhotoButton.addEventListener('click', () => clearPhoto('Photo removed.'));
+
+    async function analyzeImage(blob) {
+      analyzePhotoButton.disabled = true;
+      imageStatus.textContent = 'Analyzing snapshot with the local image model…';
+      try {
+        const result = await requestApi('/api/image/detect', {
+          method: 'POST',
+          headers: { 'Content-Type': blob.type || 'image/jpeg' },
+          body: blob
+        });
+        latestDetectionKey = '';
+        showDetection(result);
+        imageStatus.textContent = 'Image analysis complete. Review the possible result below.';
+      } catch (error) {
+        imageStatus.textContent = 'Image analysis failed: ' + error.message;
+      } finally {
+        analyzePhotoButton.disabled = !selectedPhoto;
+      }
+    }
+
+    analyzePhotoButton.addEventListener('click', async () => {
+      if (!selectedPhoto) {
+        imageStatus.textContent = 'Select a photo first, or capture a camera frame.';
+        return;
+      }
+      await analyzeImage(selectedPhoto);
+    });
+
+    async function startCamera() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        imageStatus.textContent = 'Camera access is unavailable in this browser or page context.';
+        return;
+      }
+
+      startCameraButton.disabled = true;
+      imageStatus.textContent = 'Requesting camera permission…';
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        cameraPreview.srcObject = cameraStream;
+        await cameraPreview.play();
+        cameraPreview.hidden = false;
+        capturePhotoButton.disabled = false;
+        stopCameraButton.disabled = false;
+        startCameraButton.textContent = 'Camera on';
+        imageStatus.textContent = 'Camera is on. Capture a frame when ready.';
+      } catch (error) {
+        stopCamera();
+        const message = error.name === 'NotAllowedError'
+          ? 'Camera permission was denied. Allow camera access in your browser settings to use this feature.'
+          : error.name === 'NotFoundError'
+            ? 'No camera was found on this device.'
+            : 'Could not start the camera: ' + error.message;
+        imageStatus.textContent = message;
+      } finally {
+        startCameraButton.disabled = Boolean(cameraStream);
+      }
+    }
+
+    function stopCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      cameraPreview.pause();
+      cameraPreview.srcObject = null;
+      cameraPreview.hidden = true;
+      capturePhotoButton.disabled = true;
+      stopCameraButton.disabled = true;
+      startCameraButton.disabled = false;
+      startCameraButton.textContent = 'Start camera';
+    }
+
+    startCameraButton.addEventListener('click', startCamera);
+    stopCameraButton.addEventListener('click', () => {
+      stopCamera();
+      imageStatus.textContent = 'Camera stopped.';
+    });
+
+    capturePhotoButton.addEventListener('click', () => {
+      if (!cameraPreview.videoWidth || !cameraPreview.videoHeight) {
+        imageStatus.textContent = 'The camera is not ready yet. Try again in a moment.';
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = cameraPreview.videoWidth;
+      canvas.height = cameraPreview.videoHeight;
+      canvas.getContext('2d').drawImage(cameraPreview, 0, 0);
+      canvas.toBlob(blob => {
+        if (!blob) {
+          imageStatus.textContent = 'Could not capture a camera frame. Please try again.';
+          return;
+        }
+        previewPhoto(new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' }));
+        analyzeImage(blob);
+      }, 'image/jpeg');
+    });
+
+    function activityPoint(index, width, height) {
+      const left = 32;
+      const right = width - 8;
+      const top = 8;
+      const bottom = height - 24;
+      const sample = activitySamples[index];
+      return {
+        x: left + (index + 1) / activitySamples.length * (right - left),
+        y: bottom - sample.score / 100 * (bottom - top)
+      };
+    }
 
     function renderActivityChart() {
       const context = activityChart.getContext('2d');
@@ -656,7 +1134,7 @@
       const scale = window.devicePixelRatio || 1;
       activityChart.width = width * scale;
       activityChart.height = height * scale;
-      context.scale(scale, scale);
+      context.setTransform(scale, 0, 0, scale, 0, 0);
 
       const left = 32;
       const right = width - 8;
@@ -680,31 +1158,88 @@
         context.fillText(tick + '%', left - 7, y);
       }
 
-      context.beginPath();
-      context.strokeStyle = '#dc2626';
-      context.lineWidth = 2.5;
-      activitySamples.forEach((value, index) => {
-        const x = left + index / (activitySamples.length - 1) * (right - left);
-        const y = bottom - value / 100 * chartHeight;
-        if (index === 0) context.moveTo(x, y);
-        else context.lineTo(x, y);
-      });
-      context.stroke();
+      activityMarker.hidden = activitySamples.length === 0;
+      if (activitySamples.length > 0) {
+        context.beginPath();
+        context.strokeStyle = '#dc2626';
+        context.lineWidth = 2.5;
+        activitySamples.forEach((value, index) => {
+          const point = activityPoint(index, width, height);
+          if (index === 0) context.moveTo(point.x, point.y);
+          else context.lineTo(point.x, point.y);
+        });
+        context.stroke();
+
+        activitySamples.forEach((sample, index) => {
+          const point = activityPoint(index, width, height);
+          context.beginPath();
+          context.fillStyle = '#dc2626';
+          context.arc(point.x, point.y, 4, 0, Math.PI * 2);
+          context.fill();
+        });
+
+        const latestScore = activitySamples.at(-1).score;
+        activityMarker.style.setProperty(
+          '--activity-marker-y',
+          top + (100 - latestScore) / 100 * chartHeight + 'px'
+        );
+      }
     }
 
-    function updateActivityChart() {
-      const previous = activitySamples.at(-1);
-      const spike = Math.random() < 0.06 ? 28 : 0;
-      const next = Math.max(3, Math.min(98, previous + (Math.random() - 0.55) * 14 + spike));
-      activitySamples.push(next);
-      activitySamples.shift();
-      activityValue.textContent = 'Demo activity score: ' + Math.round(next) + '%';
+    function updateActivityChart(alert) {
+      const score = scorePercent(alert);
+      activitySamples.push({ score, label: alert.label, detectedAt: alert.detected_at });
+      if (activitySamples.length > 60) activitySamples.splice(0, activitySamples.length - 60);
+      activityValue.textContent = 'Latest simulation score: ' + Math.round(score) + '%';
       activityChart.setAttribute(
         'aria-label',
-        'Live demo activity score chart. Current simulated score: ' + Math.round(next) + ' percent.'
+        'Simulated activity score chart. Latest simulation score: ' + Math.round(score) + ' percent.'
       );
+      activityTooltip.hidden = true;
       renderActivityChart();
     }
+
+    activityChart.addEventListener('pointermove', event => {
+      if (activitySamples.length === 0) return;
+
+      const bounds = activityChart.getBoundingClientRect();
+      const width = activityChart.clientWidth;
+      const height = activityChart.clientHeight;
+      const pointerX = event.clientX - bounds.left;
+      const pointerY = event.clientY - bounds.top;
+      let closestIndex = -1;
+      let closestDistance = Infinity;
+
+      activitySamples.forEach((sample, index) => {
+        const point = activityPoint(index, width, height);
+        const distance = Math.hypot(pointerX - point.x, pointerY - point.y);
+        if (distance < closestDistance) {
+          closestIndex = index;
+          closestDistance = distance;
+        }
+      });
+
+      if (closestDistance > 16) {
+        activityTooltip.hidden = true;
+        return;
+      }
+
+      const point = activityPoint(closestIndex, width, height);
+      const sample = activitySamples[closestIndex];
+      activityTooltip.textContent =
+        sample.label + ' · ' + sample.score + '% · ' + time.format(sample.detectedAt);
+      activityTooltip.classList.toggle('is-below', point.y < 48);
+      activityTooltip.hidden = false;
+      activityTooltip.style.left = Math.max(
+        activityTooltip.offsetWidth / 2,
+        Math.min(width - activityTooltip.offsetWidth / 2, point.x)
+      ) + 'px';
+      activityTooltip.style.top = point.y + 'px';
+    });
+
+    activityChart.addEventListener('pointerleave', () => {
+      activityTooltip.hidden = true;
+    });
 
     function makeAlert(type, scoreIndex, detected_at) {
       const { label, room, scores } = sounds[type];
@@ -876,8 +1411,10 @@
     document.querySelector('#demo').addEventListener('submit', event => {
       event.preventDefault();
       const type = document.querySelector('#sound').value;
-      alerts.unshift(makeAlert(type, simulationCount++, new Date()));
+      const alert = makeAlert(type, simulationCount++, new Date());
+      alerts.unshift(alert);
       if (alerts.length > 12) alerts.pop();
+      updateActivityChart(alert);
       render();
     });
 
@@ -890,10 +1427,20 @@
       locationFilter.value = '';
       render();
     });
-    window.addEventListener('resize', renderActivityChart);
+    window.addEventListener('resize', () => {
+      activityTooltip.hidden = true;
+      renderActivityChart();
+    });
+    showView(window.location.hash === '#detection' ? 'detection' : 'dashboard');
+    refreshDetectorState();
+    window.setInterval(refreshDetectorState, 1200);
     render();
     renderActivityChart();
-    window.setInterval(updateActivityChart, 1000);
+    window.addEventListener('beforeunload', () => {
+      stopCamera();
+      fetch('/api/audio/stop', { method: 'POST', keepalive: true }).catch(() => {});
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    });
   </script>
 </body>
 </html>
