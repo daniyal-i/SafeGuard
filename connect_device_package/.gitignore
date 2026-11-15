@@ -1,0 +1,18 @@
+.venv/
+
+# Local device credentials and connection-kit files
+MacBookPro-Policy
+*.cert.pem
+*.private.key
+*.public.key
+*.key
+*.p12
+*.pfx
+*.jks
+
+# Local environment and secret files
+.env
+.env.*
+!.env.example
+*.secret
+secrets/
