@@ -1,0 +1,29 @@
+name: Detector syntax check
+
+on:
+  push:
+    paths:
+      - connect_device_package/detect.py
+      - .github/workflows/detector-check.yml
+  pull_request:
+    paths:
+      - connect_device_package/detect.py
+      - .github/workflows/detector-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-syntax:
+    name: Python syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile detector
+        run: python -m py_compile connect_device_package/detect.py

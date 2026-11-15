@@ -1,5 +1,7 @@
 # SafeGuard
 
+![Detector syntax check](https://github.com/daniyal-i/SafeGuard/actions/workflows/detector-check.yml/badge.svg?branch=main)
+
 ### Helping people get help sooner when seconds matter.
 
 SafeGuard is a safety-monitoring project exploring how connected sensors and
@@ -83,6 +85,10 @@ notification service) must be configured separately in AWS. The dashboard
 does not subscribe to the topic.
 
 ### Check detector status
+
+The badge at the top reports whether the detector script passes a Python syntax
+check in GitHub Actions. A green badge means the code parses; it does not mean
+the microphone, AWS connection, or live alert delivery is working.
 
 The detector reports its status in the terminal where it is running:
 

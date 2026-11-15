@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SafeGuard · Alert Dashboard</title>
+  <style>
+    :root {
+      --ink: #23213c;
+      --muted: #5d5a76;
+      --line: #e9e4f5;
+      --violet: #583bc3;
+      --lavender: #e8ddff;
+      --mint: #caf5e7;
+      --peach: #ffdfcf;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #fff;
+      color: var(--ink);
+      font: 16px/1.55 "DM Sans", system-ui, sans-serif;
+    }
+
+    header { border-bottom: 1px solid var(--line); }
+
+    .bar, main, footer {
+      max-width: 1160px;
+      margin: auto;
+      padding-inline: clamp(18px, 5vw, 48px);
+    }
+
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      min-height: 70px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-right: auto;
+      font-size: 21px;
+      font-weight: 850;
+      letter-spacing: -.05em;
+    }
+
+    .brand img {
+      display: block;
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+
+    .bar nav { display: flex; align-items: center; gap: 8px; }
+    .bar nav a {
+      border-radius: 10px;
+      padding: 8px 12px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .bar nav a:hover { background: #f8f6ff; color: var(--ink); }
+    .bar nav a[aria-current="page"] { background: #fee2e2; color: #991b1b; }
+    .mode, .label { color: var(--muted); font-size: 13px; }
+
+    .mode {
+      background: #fee2e2;
+      color: #991b1b;
+      border-radius: 100px;
+      padding: 5px 12px;
+      font-weight: 700;
+    }
+
+    main { padding-block: 32px 36px; }
+    h1, h2, p, figure { margin: 0; }
+
+    h1 {
+      font-size: clamp(39px, 7vw, 72px);
+      line-height: 1.04;
+      letter-spacing: -.07em;
+    }
+
+    h2 { font-size: 21px; letter-spacing: -.035em; }
+
+    .intro-card {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      border: 1px solid #e1d5fa;
+      border-radius: 32px;
+      padding: clamp(24px, 5vw, 50px);
+      background: #fff;
+    }
+
+    .intro-card::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      right: 4%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: clamp(90px, 22vw, 244px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: repeating-radial-gradient(
+        circle, #e8ddff80 0 2px, transparent 3px 18px
+      );
+    }
+
+    .intro { color: var(--muted); max-width: 510px; margin-top: 14px; }
+
+    .hero, .analytics {
+      display: grid;
+      gap: 16px;
+      margin-block: 18px;
+      grid-template-columns: 1.25fr 1fr;
+    }
+
+    .analytics { grid-template-columns: 1.2fr 1fr; }
+
+    .card, .history {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #fff;
+      padding: clamp(18px, 3vw, 26px);
+      box-shadow: 0 8px 24px #3d237508;
+    }
+
+    .event {
+      margin-top: 6px;
+      font-size: clamp(25px, 5vw, 40px);
+      font-weight: 800;
+      letter-spacing: -.055em;
+    }
+
+    dl { display: flex; flex-wrap: wrap; gap: 10px 25px; margin: 12px 0 0; }
+    dt { color: var(--muted); font-size: 13px; }
+    dd { margin: 2px 0 0; }
+
+    .latest-location {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: clamp(17px, 3vw, 22px);
+      font-weight: 800;
+    }
+
+    .location-cell { font-weight: 800; }
+
+    .controls p, .about p, figcaption p {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+    select, button {
+      font: inherit;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 12px;
+    }
+
+    select { max-width: 100%; background: #f8f6ff; color: var(--ink); }
+    button { cursor: pointer; background: #dc2626; color: #fff; font-weight: 750; }
+    button:hover { background: #b91c1c; }
+    :focus-visible { outline: 2px solid #dc2626; outline-offset: 3px; }
+
+    figure label { display: block; margin-top: 12px; color: var(--muted); font-size: 14px; }
+    figure select { margin-left: 6px; }
+
+    .hist {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .bin {
+      display: grid;
+      grid-template-rows: 116px auto;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .column {
+      display: flex;
+      align-items: end;
+      justify-content: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .column span {
+      width: 70%;
+      height: var(--height);
+      min-height: 14px;
+      border-radius: 10px 10px 0 0;
+      background: var(--bin-color, var(--lavender));
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .column span.empty { background: transparent; }
+    .bin:nth-child(2) { --bin-color: var(--mint); }
+    .bin:nth-child(3) { --bin-color: var(--peach); }
+    .bin:nth-child(4) { --bin-color: #f8c7d1; }
+    .bin:nth-child(5) { --bin-color: #ef6477; }
+    .bin > span { margin-top: 5px; }
+
+    .hist.horizontal { grid-template-columns: 1fr; }
+    .hist.horizontal .bin { display: flex; align-items: center; gap: 10px; text-align: left; }
+    .hist.horizontal .bin > span { order: -1; flex: 0 0 62px; margin: 0; }
+
+    .hist.horizontal .column {
+      flex: 1;
+      justify-content: flex-start;
+      border: 0;
+      border-radius: 8px;
+      background: #f8f4fb;
+    }
+
+    .hist.horizontal .column span {
+      width: var(--share);
+      min-width: 1.5rem;
+      height: auto;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .live-card { margin-block: 18px; }
+
+    .live-card .head { align-items: flex-start; }
+
+    .live-card figcaption p, .live-note {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .live-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 5px 11px;
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
+    .live-status span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #dc2626;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% { opacity: .3; box-shadow: 0 0 0 5px #dc262633; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .live-status span { animation: none; }
+    }
+
+    #activity-chart {
+      display: block;
+      width: 100%;
+      height: 190px;
+    }
+
+    .live-value { font-size: 14px; font-weight: 750; }
+
+    .breakdown { display: grid; gap: 12px; margin-top: 16px; }
+    .category { display: grid; grid-template-columns: 1fr auto; gap: 5px; font-size: 14px; }
+
+    .track {
+      grid-column: 1 / -1;
+      height: 13px;
+      overflow: hidden;
+      border-radius: 20px;
+      background: #f2eff8;
+    }
+
+    .track span {
+      display: block;
+      width: var(--width);
+      height: 100%;
+      border-radius: 20px;
+      background: var(--swatch);
+    }
+
+    .donut {
+      display: grid;
+      place-items: center;
+      width: 120px;
+      aspect-ratio: 1;
+      margin: 4px auto;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--mint) 0 var(--split),
+        var(--peach) var(--split) var(--second-split),
+        var(--lavender) var(--second-split) 100%
+      );
+    }
+
+    .donut span {
+      display: grid;
+      place-items: center;
+      width: 76%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #fff;
+      font-weight: 800;
+    }
+
+    .breakdown.is-donut .track { display: none; }
+    .breakdown.is-donut .category { grid-template-columns: auto 1fr auto; }
+
+    .breakdown.is-donut .category::before {
+      content: "";
+      align-self: center;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--swatch);
+    }
+
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .history-tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .filter-field {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .filter-field select { min-width: 150px; }
+
+    .clear-filters {
+      border: 0;
+      padding: 8px 4px;
+      background: transparent;
+      color: #b91c1c;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .clear-filters:hover { background: transparent; color: #7f1d1d; text-decoration: underline; }
+
+    .scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th, td {
+      padding: 11px 12px 11px 0;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    th { color: var(--muted); font-size: 13px; font-weight: 650; }
+    tbody tr:last-child td { border: 0; }
+
+    .about { margin-top: 18px; scroll-margin-top: 18px; }
+    .about p { max-width: 760px; font-size: 16px; }
+    footer {
+      margin-top: 20px;
+      border-top: 1px solid var(--line);
+      background: #faf9fc;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 18px;
+      max-width: 1160px;
+      margin: auto;
+      padding: 24px clamp(18px, 5vw, 48px);
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .footer-brand img { width: 32px; height: 32px; object-fit: contain; }
+    .footer-note { margin-top: 5px; color: var(--muted); font-size: 13px; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 16px; }
+    .footer-links a { color: var(--muted); font-size: 14px; text-decoration: none; }
+    .footer-links a:hover { color: #b91c1c; text-decoration: underline; }
+
+    @media (max-width: 680px) {
+      .hero, .analytics { grid-template-columns: 1fr; }
+      .bar { gap: 12px; }
+      .bar nav { gap: 2px; }
+      .bar nav a { padding-inline: 8px; }
+      .footer-content { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="brand">
+        <img src="./SafeGuardLogo.png" width="40" height="40" alt="">
+        SafeGuard
+      </div>
+      <nav aria-label="Main navigation">
+        <a href="#dashboard" aria-current="page">Alert Dashboard</a>
+        <a href="#about">About</a>
+      </nav>
+      <div class="mode">Demo mode</div>
+    </div>
+  </header>
+
+  <main id="dashboard">
+    <div class="intro-card">
+      <h1>Alert dashboard</h1>
+      <p class="intro">
+        SafeGuard aims to help people get a faster response to potential danger.
+        Explore simulated alerts while the live sensor connection is being built.
+      </p>
+    </div>
+
+    <div class="hero">
+      <section class="card" aria-labelledby="latest-heading">
+        <h2 id="latest-heading">Latest alert</h2>
+        <div id="latest" aria-live="polite"></div>
+      </section>
+
+      <section class="card controls" aria-labelledby="demo-heading">
+        <h2 id="demo-heading">Simulate an alert</h2>
+        <p>Choose a sound to see how a new alert appears in the dashboard.</p>
+        <form id="demo" class="actions">
+          <select id="sound" aria-label="Sound to simulate">
+            <option value="gunshot">Possible gunshot</option>
+            <option value="glass_breaking">Glass breaking</option>
+            <option value="alarm">Alarm</option>
+          </select>
+          <button type="submit">Run simulation</button>
+        </form>
+      </section>
+    </div>
+
+    <section class="card live-card" aria-labelledby="live-heading">
+      <div class="head">
+        <div>
+          <h2 id="live-heading">Live activity preview</h2>
+          <p class="live-note">Simulated detector activity score over the last minute.</p>
+        </div>
+        <span class="live-status"><span aria-hidden="true"></span>LIVE DEMO</span>
+      </div>
+      <canvas id="activity-chart" role="img" aria-label="Live demo activity score chart"></canvas>
+      <p id="activity-value" class="live-value">Demo activity score: 12%</p>
+      <p class="live-note">This animated preview uses generated data. It is not connected to the detector or AWS.</p>
+    </section>
+
+    <section class="analytics" aria-label="Alert charts">
+      <figure class="card">
+        <figcaption>
+          <h2>Model score distribution</h2>
+          <p>Number of alerts in each score range.</p>
+        </figcaption>
+        <label>
+          Chart type
+          <select id="score-chart">
+            <option value="histogram">Histogram</option>
+            <option value="horizontal">Horizontal bars</option>
+          </select>
+        </label>
+        <div id="histogram" class="hist" role="list" aria-label="Model score ranges"></div>
+      </figure>
+
+      <figure class="card">
+        <figcaption>
+          <h2>Alerts by sound</h2>
+          <p>Counts by sound in the current alert history.</p>
+        </figcaption>
+        <label>
+          Chart type
+          <select id="sound-chart">
+            <option value="bars">Bar chart</option>
+            <option value="donut">Donut chart</option>
+          </select>
+        </label>
+        <div id="breakdown" class="breakdown"></div>
+      </figure>
+    </section>
+
+    <section class="history" aria-labelledby="history-heading">
+      <div class="head">
+        <h2 id="history-heading">Recent alerts</h2>
+        <span id="count" class="label" aria-live="polite"></span>
+      </div>
+      <div class="history-tools" aria-label="Filter alerts">
+        <label class="filter-field">
+          Sound
+          <select id="sound-filter">
+            <option value="">All sounds</option>
+          </select>
+        </label>
+        <label class="filter-field">
+          Location
+          <select id="location-filter">
+            <option value="">All locations</option>
+          </select>
+        </label>
+        <button id="clear-filters" class="clear-filters" type="button">Clear filters</button>
+      </div>
+      <div class="scroll" tabindex="0" role="region" aria-label="Recent alerts table">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Sound</th>
+              <th scope="col">Location</th>
+              <th scope="col">Detected</th>
+              <th scope="col">Model score</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="about" class="card about" aria-labelledby="about-heading">
+      <h2 id="about-heading">About SafeGuard</h2>
+      <p>
+        SafeGuard is a safety-monitoring project with the goal of combining
+        sensor inputs to help identify potential dangers and alert the right
+        people sooner, especially when someone may be panicked or unable to call
+        for help. Faster alerts could support a quicker response, but cannot
+        guarantee safety or replace contacting emergency services directly.
+        This prototype currently includes device code that listens for
+        gunshot-like sounds and can publish a detection to AWS IoT Core when
+        configured. This dashboard is not connected to that device or AWS: its
+        alerts and activity graph use simulated data, and it does not contact
+        first responders. A detection is only a possible alert and needs human
+        verification. In an emergency, call 911 or your local emergency number.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div>
+        <div class="footer-brand">
+          <img src="./SafeGuardLogo.png" width="32" height="32" alt="">
+          SafeGuard
+        </div>
+        <p class="footer-note">Safety-monitoring prototype · simulated dashboard · not an emergency service</p>
+      </div>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="#dashboard">Alert Dashboard</a>
+        <a href="#about">About SafeGuard</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    const sounds = {
+      gunshot: {
+        label: 'Possible gunshot',
+        room: 'Main hallway',
+        scores: [0.82, 0.69, 0.87],
+        color: 'var(--mint)'
+      },
+      glass_breaking: {
+        label: 'Glass breaking',
+        room: 'Main hallway',
+        scores: [0.82, 0.67, 0.74, 0.55],
+        color: 'var(--peach)'
+      },
+      alarm: {
+        label: 'Alarm',
+        room: 'East entrance',
+        scores: [0.91, 0.78, 0.46, 0.86],
+        color: 'var(--lavender)'
+      }
+    };
+
+    const alerts = [
+      ['gunshot', 0, 2],
+      ['alarm', 0, 8],
+      ['glass_breaking', 1, 15],
+      ['alarm', 1, 21],
+      ['glass_breaking', 3, 33],
+      ['alarm', 2, 48]
+    ].map(([type, score, minutesAgo]) =>
+      makeAlert(type, score, new Date(Date.now() - minutesAgo * 60000))
+    );
+
+    let simulationCount = 0;
+
+    const time = new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'medium'
+    });
+
+    const latest = document.querySelector('#latest');
+    const rows = document.querySelector('#rows');
+    const histogram = document.querySelector('#histogram');
+    const breakdown = document.querySelector('#breakdown');
+    const scoreChart = document.querySelector('#score-chart');
+    const soundChart = document.querySelector('#sound-chart');
+    const soundFilter = document.querySelector('#sound-filter');
+    const locationFilter = document.querySelector('#location-filter');
+    const activityChart = document.querySelector('#activity-chart');
+    const activityValue = document.querySelector('#activity-value');
+    const activitySamples = Array.from({ length: 60 }, () => 12);
+
+    function renderActivityChart() {
+      const context = activityChart.getContext('2d');
+      const width = activityChart.clientWidth;
+      const height = activityChart.clientHeight;
+      const scale = window.devicePixelRatio || 1;
+      activityChart.width = width * scale;
+      activityChart.height = height * scale;
+      context.scale(scale, scale);
+
+      const left = 32;
+      const right = width - 8;
+      const top = 8;
+      const bottom = height - 24;
+      const chartHeight = bottom - top;
+
+      context.clearRect(0, 0, width, height);
+      context.font = '12px system-ui, sans-serif';
+      context.textAlign = 'right';
+      context.textBaseline = 'middle';
+
+      for (const tick of [0, 50, 100]) {
+        const y = bottom - tick / 100 * chartHeight;
+        context.beginPath();
+        context.strokeStyle = '#e9e4f5';
+        context.moveTo(left, y);
+        context.lineTo(right, y);
+        context.stroke();
+        context.fillStyle = '#5d5a76';
+        context.fillText(tick + '%', left - 7, y);
+      }
+
+      context.beginPath();
+      context.strokeStyle = '#dc2626';
+      context.lineWidth = 2.5;
+      activitySamples.forEach((value, index) => {
+        const x = left + index / (activitySamples.length - 1) * (right - left);
+        const y = bottom - value / 100 * chartHeight;
+        if (index === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+      });
+      context.stroke();
+    }
+
+    function updateActivityChart() {
+      const previous = activitySamples.at(-1);
+      const spike = Math.random() < 0.06 ? 28 : 0;
+      const next = Math.max(3, Math.min(98, previous + (Math.random() - 0.55) * 14 + spike));
+      activitySamples.push(next);
+      activitySamples.shift();
+      activityValue.textContent = 'Demo activity score: ' + Math.round(next) + '%';
+      activityChart.setAttribute(
+        'aria-label',
+        'Live demo activity score chart. Current simulated score: ' + Math.round(next) + ' percent.'
+      );
+      renderActivityChart();
+    }
+
+    function makeAlert(type, scoreIndex, detected_at) {
+      const { label, room, scores } = sounds[type];
+      return {
+        type,
+        label,
+        room,
+        confidence: scores[scoreIndex % scores.length],
+        detected_at
+      };
+    }
+
+    function element(tag, value) {
+      const node = document.createElement(tag);
+      node.textContent = value;
+      return node;
+    }
+
+    function scorePercent(alert) {
+      return Math.round(alert.confidence * 100);
+    }
+
+    function updateFilterOptions(select, values, placeholder) {
+      const selected = select.value;
+      const options = [new Option(placeholder, '')];
+      for (const value of values) options.push(new Option(value, value));
+      select.replaceChildren(...options);
+      select.value = values.includes(selected) ? selected : '';
+    }
+
+    function updateFilters() {
+      updateFilterOptions(
+        soundFilter,
+        [...new Set(alerts.map(alert => alert.label))].sort(),
+        'All sounds'
+      );
+      updateFilterOptions(
+        locationFilter,
+        [...new Set(alerts.map(alert => alert.room))].sort(),
+        'All locations'
+      );
+    }
+
+    function renderCharts() {
+      const bins = [0, 0, 0, 0, 0];
+
+      for (const alert of alerts) {
+        const index = Math.min(4, Math.floor(scorePercent(alert) / 20));
+        bins[index]++;
+      }
+
+      const maximum = Math.max(...bins, 1);
+      histogram.classList.toggle('horizontal', scoreChart.value === 'horizontal');
+
+      histogram.replaceChildren(...bins.map((count, index) => {
+        const upper = index === 4 ? 100 : index * 20 + 19;
+        const range = index * 20 + '–' + upper + '%';
+        const bin = document.createElement('div');
+        bin.className = 'bin';
+        bin.setAttribute('role', 'listitem');
+        bin.setAttribute('aria-label', range + ': ' + count + ' alerts');
+
+        const column = document.createElement('div');
+        column.className = 'column';
+        column.setAttribute('aria-hidden', 'true');
+
+        const bar = element('span', count);
+        bar.classList.toggle('empty', count === 0);
+        bar.style.setProperty('--height', count ? Math.max(16, count / maximum * 100) + '%' : '0%');
+        bar.style.setProperty('--share', count / maximum * 100 + '%');
+
+        column.append(bar);
+        bin.append(column, element('span', range));
+        return bin;
+      }));
+
+      const showDonut = soundChart.value === 'donut';
+      breakdown.classList.toggle('is-donut', showDonut);
+
+      const counts = Object.entries(sounds).map(([type, sound]) => ({
+        ...sound,
+        count: alerts.filter(alert => alert.type === type).length
+      }));
+
+      breakdown.replaceChildren(...counts.map(({ label, count, color }) => {
+        const row = document.createElement('div');
+        row.className = 'category';
+        row.style.setProperty('--swatch', color);
+
+        const track = document.createElement('div');
+        track.className = 'track';
+        track.setAttribute('aria-hidden', 'true');
+
+        const fill = document.createElement('span');
+        fill.style.setProperty('--width', count / alerts.length * 100 + '%');
+        track.append(fill);
+
+        row.append(element('span', label), element('strong', count), track);
+        return row;
+      }));
+
+      if (showDonut) {
+        const donut = document.createElement('div');
+        donut.className = 'donut';
+        donut.setAttribute('aria-hidden', 'true');
+        donut.style.setProperty('--split', counts[0].count / alerts.length * 100 + '%');
+        donut.style.setProperty('--second-split', (counts[0].count + counts[1].count) / alerts.length * 100 + '%');
+        donut.append(element('span', alerts.length + ' alerts'));
+        breakdown.prepend(donut);
+      }
+    }
+
+    function render() {
+      const alert = alerts[0];
+      updateFilters();
+      const title = element('p', alert.label);
+      title.className = 'event';
+
+      const details = document.createElement('dl');
+      for (const [label, value] of [
+        ['Location', alert.room],
+        ['Detected', time.format(alert.detected_at)],
+        ['Model score', scorePercent(alert) + '%']
+      ]) {
+        const field = document.createElement('div');
+        const detail = element('dd', value);
+        if (label === 'Location') detail.className = 'latest-location';
+        field.append(element('dt', label), detail);
+        details.append(field);
+      }
+
+      latest.replaceChildren(title, details);
+
+      const filteredAlerts = alerts.filter(event =>
+        (!soundFilter.value || event.label === soundFilter.value) &&
+        (!locationFilter.value || event.room === locationFilter.value)
+      );
+
+      const alertRows = filteredAlerts.map(event => {
+        const row = document.createElement('tr');
+        const location = element('td', event.room);
+        location.className = 'location-cell';
+
+        row.append(
+          element('td', event.label),
+          location,
+          element('td', time.format(event.detected_at)),
+          element('td', scorePercent(event) + '%')
+        );
+
+        return row;
+      });
+
+      if (alertRows.length === 0) {
+        const row = document.createElement('tr');
+        const message = element('td', 'No alerts match these filters.');
+        message.colSpan = 4;
+        row.append(message);
+        alertRows.push(row);
+      }
+
+      rows.replaceChildren(...alertRows);
+
+      document.querySelector('#count').textContent =
+        filteredAlerts.length + ' of ' + alerts.length + ' alerts';
+      renderCharts();
+    }
+
+    document.querySelector('#demo').addEventListener('submit', event => {
+      event.preventDefault();
+      const type = document.querySelector('#sound').value;
+      alerts.unshift(makeAlert(type, simulationCount++, new Date()));
+      if (alerts.length > 12) alerts.pop();
+      render();
+    });
+
+    scoreChart.addEventListener('change', renderCharts);
+    soundChart.addEventListener('change', renderCharts);
+    soundFilter.addEventListener('change', render);
+    locationFilter.addEventListener('change', render);
+    document.querySelector('#clear-filters').addEventListener('click', () => {
+      soundFilter.value = '';
+      locationFilter.value = '';
+      render();
+    });
+    window.addEventListener('resize', renderActivityChart);
+    render();
+    renderActivityChart();
+    window.setInterval(updateActivityChart, 1000);
+  </script>
+</body>
+</html>
