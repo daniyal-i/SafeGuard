@@ -13,6 +13,7 @@ gast==0.7.0
 google-pasta==0.2.0
 grpcio==1.85.1
 h5py==3.14.0
+huggingface-hub==1.8.0
 idna==3.20
 jmespath==1.1.0
 keras==3.15.1
@@ -44,6 +45,7 @@ tensorflow-hub==0.16.1
 termcolor==3.3.0
 tf_keras==2.21.0
 typing_extensions==4.12.2
+ultralytics==8.4.214
 urllib3==2.8.0
 wheel==0.48.0
 wrapt==2.5.2
