@@ -16,10 +16,11 @@ Setup:
 
 import csv
 import json
-import os
 import queue
+import threading
 import time
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import sounddevice as sd
@@ -68,17 +69,22 @@ def connect_iot():
     from awscrt import mqtt
     from awsiot import mqtt_connection_builder
 
-    for f in (CERT_FILE, KEY_FILE, CA_FILE):
-        if not os.path.exists(f):
-            raise SystemExit(f"Missing file: {f} - put this script in the connection kit folder "
+    base_dir = Path(__file__).resolve().parent
+    credentials = [
+        Path(name) if Path(name).is_absolute() else base_dir / name
+        for name in (CERT_FILE, KEY_FILE, CA_FILE)
+    ]
+    for path in credentials:
+        if not path.is_file():
+            raise SystemExit(f"Missing file: {path.name} - put this file in the connection kit folder "
                              f"and check the file names at the top of the script.")
 
     print(f"Connecting to AWS IoT Core as '{CLIENT_ID}'...")
     conn = mqtt_connection_builder.mtls_from_path(
         endpoint=IOT_ENDPOINT,
-        cert_filepath=CERT_FILE,
-        pri_key_filepath=KEY_FILE,
-        ca_filepath=CA_FILE,
+        cert_filepath=str(credentials[0]),
+        pri_key_filepath=str(credentials[1]),
+        ca_filepath=str(credentials[2]),
         client_id=CLIENT_ID,
         clean_session=False,
         keep_alive_secs=30,
@@ -95,9 +101,20 @@ def connect_iot():
     return conn, publish
 
 
-def main():
+def run_detection(stop_event=None, on_status=print, on_detection=print, publish_to_iot=True):
+    stop_event = stop_event or threading.Event()
+    on_status("Loading YAMNet audio model; first run may download it.")
     model, names, target_idx = load_model()
-    conn, publish = connect_iot()
+    if stop_event.is_set():
+        return
+    conn = None
+    publish = None
+    aws_status = ""
+    if publish_to_iot:
+        try:
+            conn, publish = connect_iot()
+        except (Exception, SystemExit) as exc:
+            aws_status = f" AWS publishing unavailable: {exc}"
 
     audio_q = queue.Queue()
     window_len = int(SAMPLE_RATE * WINDOW_SECONDS)
@@ -107,18 +124,24 @@ def main():
 
     def callback(indata, frames, time_info, status):
         if status:
-            print(status)
+            on_status(str(status))
         audio_q.put(indata[:, 0].copy())
 
     hits = 0
     last_alert = 0.0
 
-    print(f"Listening in '{ROOM}'... (Ctrl+C to stop)")
+    on_status(f"Listening in '{ROOM}'.{aws_status}")
     try:
+        if stop_event.is_set():
+            return
         with sd.InputStream(samplerate=SAMPLE_RATE, channels=1, dtype="float32",
                             blocksize=hop_len, callback=callback):
-            while True:
-                pending = np.concatenate([pending, audio_q.get()])
+            while not stop_event.is_set():
+                try:
+                    chunk = audio_q.get(timeout=0.25)
+                except queue.Empty:
+                    continue
+                pending = np.concatenate([pending, chunk])
                 if len(pending) < hop_len:
                     continue
                 chunk, pending = pending[:hop_len], pending[hop_len:]
@@ -129,7 +152,10 @@ def main():
                 gun_score = float(frame_max[target_idx].max())
                 top = names[int(frame_max.argmax())]
                 level = float(np.sqrt(np.mean(buffer ** 2)))
-                print(f"\rtop: {top:<28} gunshot: {gun_score:.2f}  level: {level:.3f}   ", end="")
+                on_status(
+                    f"Listening. Top sound: {top}; possible gunshot score: {gun_score:.2f}; "
+                    f"audio level: {level:.3f}.{aws_status}"
+                )
 
                 hits = hits + 1 if gun_score >= THRESHOLD else 0
                 now = time.time()
@@ -143,18 +169,31 @@ def main():
                         "device": DEVICE_ID,
                         "detected_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     }
-                    print(f"\n\n*** GUNSHOT DETECTED *** {message}")
-                    try:
-                        publish(message)
-                    except Exception as e:
-                        print("  -> publish FAILED:", e)
-                    print()
+                    message["label"] = "Possible gunshot-like sound"
+                    if publish:
+                        try:
+                            publish(message)
+                            message["published"] = True
+                        except Exception as exc:
+                            message["published"] = False
+                            on_status(f"Possible sound detection; AWS publish failed: {exc}")
+                    else:
+                        message["published"] = False
+                    on_detection(message)
     finally:
-        conn.disconnect().result()
+        if conn:
+            conn.disconnect().result()
+
+
+def main():
+    def show_status(message):
+        print(f"\r{message:<120}", end="", flush=True)
+
+    try:
+        run_detection(on_status=show_status)
+    except KeyboardInterrupt:
+        print("\nStopped.")
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\nStopped.")
+    main()
